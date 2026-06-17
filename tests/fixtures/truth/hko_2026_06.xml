@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DailyExtract station="HKO" year="2026" month="6">
+  <Day date="2026-06-14">
+    <DailyMax>30.4</DailyMax>
+    <DailyMin>26.1</DailyMin>
+  </Day>
+  <Day date="2026-06-15">
+    <DailyMax>31.2</DailyMax>
+    <DailyMin>26.8</DailyMin>
+  </Day>
+  <Day date="2026-06-16">
+    <DailyMax>30.9</DailyMax>
+    <DailyMin>26.5</DailyMin>
+  </Day>
+</DailyExtract>

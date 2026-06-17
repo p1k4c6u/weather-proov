@@ -1,0 +1,26 @@
+000
+CDUS41 KOKX 161000
+CLINYC
+
+CLIMATE REPORT
+NATIONAL WEATHER SERVICE NEW YORK NY
+600 AM EDT TUE JUN 16 2026
+
+...................................
+
+CLIMATE SUMMARY FOR CENTRAL PARK NY
+VALID 2026-06-15
+
+WEATHER ITEM   OBSERVED    RECORD
+                 VALUE      VALUE
+...................................................................
+TEMPERATURE (F)
+   MAXIMUM TEMPERATURE       87        101
+   MINIMUM TEMPERATURE       72         55
+   AVERAGE TEMPERATURE       80         75
+
+PRECIPITATION (IN)
+   YESTERDAY                 0.00
+...
+
+$$

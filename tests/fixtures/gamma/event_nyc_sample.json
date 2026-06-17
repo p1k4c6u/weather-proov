@@ -1,0 +1,55 @@
+{
+  "id": "evt-sample-nyc-2026-06-15",
+  "slug": "highest-temperature-in-nyc-on-2026-06-15",
+  "title": "Highest temperature in NYC on June 15, 2026",
+  "markets": [
+    {
+      "id": "mkt-nyc-2026-06-15-be-83",
+      "conditionId": "0xcond-nyc-83",
+      "slug": "highest-temperature-in-nyc-on-2026-06-15-be-83",
+      "outcomes": "[\"Yes\",\"No\"]",
+      "clobTokenIds": "[\"tok-yes-nyc-83\",\"tok-no-nyc-83\"]",
+      "closed": false
+    },
+    {
+      "id": "mkt-nyc-2026-06-15-be-85",
+      "conditionId": "0xcond-nyc-85",
+      "slug": "highest-temperature-in-nyc-on-2026-06-15-be-85",
+      "outcomes": "[\"Yes\",\"No\"]",
+      "clobTokenIds": "[\"tok-yes-nyc-85\",\"tok-no-nyc-85\"]",
+      "closed": false
+    },
+    {
+      "id": "mkt-nyc-2026-06-15-be-87",
+      "conditionId": "0xcond-nyc-87",
+      "slug": "highest-temperature-in-nyc-on-2026-06-15-be-87",
+      "outcomes": "[\"Yes\",\"No\"]",
+      "clobTokenIds": "[\"tok-yes-nyc-87\",\"tok-no-nyc-87\"]",
+      "closed": false
+    },
+    {
+      "id": "mkt-nyc-2026-06-15-be-89-or-higher",
+      "conditionId": "0xcond-nyc-89-tail",
+      "slug": "highest-temperature-in-nyc-on-2026-06-15-be-89-or-higher",
+      "outcomes": "[\"Yes\",\"No\"]",
+      "clobTokenIds": "[\"tok-yes-nyc-89-hi\",\"tok-no-nyc-89-hi\"]",
+      "closed": false
+    },
+    {
+      "id": "mkt-nyc-2026-06-15-be-81-or-lower",
+      "conditionId": "0xcond-nyc-81-tail",
+      "slug": "highest-temperature-in-nyc-on-2026-06-15-be-81-or-lower",
+      "outcomes": "[\"Yes\",\"No\"]",
+      "clobTokenIds": ["tok-yes-nyc-81-lo", "tok-no-nyc-81-lo"],
+      "closed": false
+    },
+    {
+      "id": "mkt-this-is-an-unrelated-market",
+      "conditionId": "0xcond-other",
+      "slug": "something-completely-different-2026-06-15",
+      "outcomes": "[\"Yes\",\"No\"]",
+      "clobTokenIds": "[\"x\",\"y\"]",
+      "closed": false
+    }
+  ]
+}

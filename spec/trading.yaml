@@ -1,0 +1,56 @@
+fees:
+  taker_bps: null
+  maker_bps: null
+  winnings_fee_bps: null
+  gas_fixed_usd: 0.0
+
+slippage:
+  model: half_spread_plus
+  alpha: 0.25
+
+oracle_haircut: 0.0
+
+edges:
+  min_edge_after_fees:
+    d0: 0.04
+    d1: 0.05
+    d2: 0.07
+    d3: 0.08
+  min_model_prob_for_yes: 0.05
+
+indicators:
+  weights:
+    I1: 1.0
+    I2: 1.0
+    I3: 0.5
+    I4: 0.6
+  i1_veto: true
+  downside_eps_trust_hour_offset: -1.0
+
+sizing:
+  kelly_fraction: 0.25
+  bankroll_allocated_usd: 1000
+  exposure:
+    max_stake_per_market_usd: 25
+    max_stake_per_station_target_date_usd: 50
+    max_station_chain_risk_usd: 100
+    opposite_direction_offset: 0.5
+    max_open_risk_usd: 300
+  chain_brakes:
+    consecutive_loss_days_halve: 2
+    consecutive_loss_days_halt: 3
+    regime_error_freeze_c: 2.5
+
+risk:
+  daily_loss_kill_usd: 50
+  stale_probs_max_age_s: 21600
+  stale_obs_max_age_s: 1800
+  kill_file: data/KILL
+
+flags:
+  leads_enabled:
+    d0: true
+    d1: true
+    d2: true
+    d3: true
+  maker_mode_planned: false

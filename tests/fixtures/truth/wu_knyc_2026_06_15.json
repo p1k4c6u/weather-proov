@@ -1,0 +1,10 @@
+{
+  "observations": [
+    {"valid_time_gmt": 1718438400, "temp": 73, "wx_phrase": "Mostly Cloudy"},
+    {"valid_time_gmt": 1718442000, "temp": 78, "wx_phrase": "Sunny"},
+    {"valid_time_gmt": 1718445600, "temp": 84, "wx_phrase": "Sunny"},
+    {"valid_time_gmt": 1718449200, "temp": 87, "wx_phrase": "Sunny"},
+    {"valid_time_gmt": 1718452800, "temp": 85, "wx_phrase": "Partly Cloudy"},
+    {"valid_time_gmt": 1718456400, "temp": 80, "wx_phrase": "Cloudy"}
+  ]
+}

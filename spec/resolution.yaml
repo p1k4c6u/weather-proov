@@ -1,0 +1,91 @@
+schema_version: 2
+cities:
+  hong_kong:
+    name: "Hong Kong"
+    polymarket_slug_pattern: "highest-temperature-in-hong-kong-on-{date}"
+    latitude: 22.3019
+    longitude: 114.1742
+    timezone: "Asia/Hong_Kong"
+    variable: daily_high
+    settlement:
+      provider: "Hong Kong Observatory"
+      station_id: "HKO"
+      source_kind: hko_daily_extract
+      url: "https://www.hko.gov.hk/en/cis/dailyExtract.htm"
+      units: celsius
+      reported_precision: 1
+      revision_policy: first_publication_only
+      typical_delay_hours: 24
+    buckets:
+      kind: binary_per_label
+      label_units: celsius
+      hypothesis: null
+      width: null
+      rounding_verified: false
+    live_obs:
+      source_kind: hko_open_data
+      cadence_s: 600
+      poll_s: 60
+    chain:
+      rho: null
+      peak_local_hour: 14.5
+
+  london:
+    name: "London"
+    polymarket_slug_pattern: "highest-temperature-in-london-on-{date}"
+    latitude: 51.5048
+    longitude: 0.0495
+    timezone: "Europe/London"
+    variable: daily_high
+    settlement:
+      provider: "Wunderground"
+      station_id: "EGLC"
+      source_kind: wunderground_daily
+      url: "https://www.wunderground.com/history/daily/gb/london/EGLC/date/{yyyy}-{m}-{d}"
+      units: celsius
+      reported_precision: 0
+      revision_policy: revisable_until_next_day
+      typical_delay_hours: 24
+    buckets:
+      kind: binary_per_label
+      label_units: celsius
+      hypothesis: null
+      width: null
+      rounding_verified: false
+    live_obs:
+      source_kind: metar
+      cadence_s: 1800
+      poll_s: 300
+    chain:
+      rho: null
+      peak_local_hour: 15.0
+
+  new_york:
+    name: "New York City"
+    polymarket_slug_pattern: "highest-temperature-in-nyc-on-{date}"
+    latitude: 40.7789
+    longitude: -73.9692
+    timezone: "America/New_York"
+    variable: daily_high
+    settlement:
+      provider: "Wunderground"
+      station_id: "KNYC"
+      source_kind: wunderground_daily
+      url: "https://www.wunderground.com/history/daily/us/ny/new-york-city/KNYC/date/{yyyy}-{m}-{d}"
+      units: fahrenheit
+      reported_precision: 0
+      revision_policy: first_publication_only
+      typical_delay_hours: 24
+    buckets:
+      kind: binary_per_label
+      label_units: fahrenheit
+      hypothesis: null
+      width: null
+      rounding_verified: false
+    live_obs:
+      source_kind: nws_api
+      cadence_s: 300
+      poll_s: 60
+    chain:
+      rho: null
+      peak_local_hour: 15.5
