@@ -38,12 +38,12 @@ cities:
     timezone: "Europe/London"
     variable: daily_high
     settlement:
-      provider: "Wunderground"
+      provider: "Open-Meteo ERA5 Archive"
       station_id: "EGLC"
-      source_kind: wunderground_daily
-      url: "https://www.wunderground.com/history/daily/gb/london/EGLC/date/{yyyy}-{m}-{d}"
+      source_kind: open_meteo_archive
+      url: "https://archive-api.open-meteo.com/v1/archive"
       units: celsius
-      reported_precision: 0
+      reported_precision: 1
       revision_policy: revisable_until_next_day
       typical_delay_hours: 24
     buckets:
@@ -68,10 +68,10 @@ cities:
     timezone: "America/New_York"
     variable: daily_high
     settlement:
-      provider: "Wunderground"
+      provider: "NWS Climate Observation"
       station_id: "KNYC"
-      source_kind: wunderground_daily
-      url: "https://www.wunderground.com/history/daily/us/ny/new-york-city/KNYC/date/{yyyy}-{m}-{d}"
+      source_kind: nws_cli
+      url: "https://api.weather.gov/products?type=CLI&location=OKX"
       units: fahrenheit
       reported_precision: 0
       revision_policy: first_publication_only

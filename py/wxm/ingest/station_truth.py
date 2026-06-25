@@ -3,8 +3,8 @@
 Three sources, one settlement role per station:
 
   - HKO (Hong Kong Observatory): monthly XML/CSV daily extract — settlement source
-  - Wunderground daily JSON: KNYC + EGLC — settlement source for those stations
-  - NWS CLI text product: KNYC cross-check only (is_settlement_source=0)
+  - Open-Meteo ERA5 Archive: EGLC (London) — settlement source, no API key required
+  - NWS CLI text product: KNYC (New York) — settlement source (OKX office)
 
 Phase 0 disclaimer: the exact upstream payload shapes vary by provider release
 and product. The parsers here implement plausible, defensive parses keyed off the
@@ -26,12 +26,15 @@ import httpx
 from ..archive import archive_raw
 from ..db import DEFAULT_DB_PATH, connect
 from ..spec import Spec
-from ..units import f_to_c
 
-WU_HISTORICAL_URL = "https://api.weather.com/v1/location/{station}/observations/historical.json"
-WU_PAGE_URL = "https://www.wunderground.com/history/daily/{path}/{station}/date/{date}"
+OPEN_METEO_ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
 NWS_PRODUCTS_URL = "https://api.weather.gov/products"
 HKO_MONTHLY_XML_URL = "https://www.hko.gov.hk/cis/dailyExtract/dailyExtract_{yyyymm}.xml"
+
+# NWS forecast office that issues the CLI product for each settlement station
+_NWS_OFFICE: dict[str, str] = {
+    "KNYC": "OKX",
+}
 
 
 @dataclass(frozen=True)
@@ -100,61 +103,51 @@ def fetch_hko(target_date: str, client: httpx.Client) -> str | None:
     return r.text
 
 
-# ---------------------------------------------------------------- Wunderground
+# --------------------------------------------------------- Open-Meteo Archive
 
 
-_WU_APIKEY_RE = re.compile(r"\bapiKey['\"]?\s*[:=]\s*['\"]([0-9a-zA-Z]{20,})['\"]")
+def parse_open_meteo_archive(payload: dict, target_date: str) -> float | None:
+    """Extract temperature_2m_max for target_date from an archive API response."""
+    daily = payload.get("daily") or {}
+    times = daily.get("time") or []
+    temps = daily.get("temperature_2m_max") or []
+    for i, t in enumerate(times):
+        if t == target_date and i < len(temps) and temps[i] is not None:
+            try:
+                return float(temps[i])
+            except (TypeError, ValueError):
+                continue
+    return None
 
 
-def extract_wu_api_key(page_html: str) -> str | None:
-    m = _WU_APIKEY_RE.search(page_html)
-    return m.group(1) if m else None
-
-
-def parse_wu_historical_json(
-    payload: dict, units_hint: str
-) -> tuple[float, str] | None:
-    """Compute the daily max from the observations array.
-
-    Returns (max_value, units) where units is 'celsius' or 'fahrenheit' matching
-    the API call (units=m → celsius; units=e → fahrenheit).
-    """
-    observations = payload.get("observations") or []
-    if not observations:
-        return None
-    temps: list[float] = []
-    for obs in observations:
-        t = obs.get("temp")
-        if t is None:
-            continue
-        try:
-            temps.append(float(t))
-        except (TypeError, ValueError):
-            continue
-    if not temps:
-        return None
-    units = "celsius" if units_hint == "m" else "fahrenheit"
-    return max(temps), units
-
-
-def fetch_wu(
-    station_id: str, target_date: str, units_hint: str, api_key: str, client: httpx.Client
+def fetch_open_meteo_archive(
+    latitude: float,
+    longitude: float,
+    timezone: str,
+    target_date: str,
+    client: httpx.Client,
 ) -> dict | None:
-    yyyymmdd = target_date.replace("-", "")
-    url = WU_HISTORICAL_URL.format(station=station_id)
     r = client.get(
-        url,
-        params={"apiKey": api_key, "units": units_hint, "startDate": yyyymmdd},
+        OPEN_METEO_ARCHIVE_URL,
+        params={
+            "latitude": latitude,
+            "longitude": longitude,
+            "start_date": target_date,
+            "end_date": target_date,
+            "daily": "temperature_2m_max",
+            "timezone": timezone,
+        },
         timeout=30,
     )
     if r.status_code == 404:
         return None
     r.raise_for_status()
-    archive_raw("truth/wunderground", r.content)
+    archive_raw("truth/open_meteo_archive", r.content)
     return r.json()
 
 
 # ----------------------------------------------------------------------- NWS
+
 
 _NWS_MAX_TEMP_RE = re.compile(
     r"MAXIMUM\s+TEMPERATURE.*?\b(-?\d{1,3})\b", re.IGNORECASE | re.DOTALL
@@ -199,7 +192,6 @@ def fetch_nws_cli(location: str, target_date: str, client: httpx.Client) -> str 
         pid = p.get("@id") or p.get("id")
         if not pid:
             continue
-        # @id is a URL; otherwise build the URL
         url = pid if pid.startswith("http") else f"{NWS_PRODUCTS_URL}/{pid}"
         d = client.get(url, timeout=30)
         if d.status_code != 200:
@@ -238,15 +230,6 @@ def upsert_observation(obs: DailyMaxObservation, db_path: Path = DEFAULT_DB_PATH
         conn.close()
 
 
-def native_to_c(value: float, units: str) -> float:
-    """Convenience helper: defers to wxm.units to honor the sole-owner rule."""
-    if units == "celsius":
-        return value
-    if units == "fahrenheit":
-        return f_to_c(value)
-    raise ValueError(f"unknown units: {units!r}")
-
-
 # ----------------------------------------------------------------- Orchestration
 
 
@@ -255,7 +238,6 @@ def fetch_truth(
     target_date: str,
     db_path: Path = DEFAULT_DB_PATH,
     client: httpx.Client | None = None,
-    wu_api_key: str | None = None,
 ) -> dict[str, list[str]]:
     """For each station, fetch settlement-grade observation(s) for target_date.
 
@@ -282,41 +264,37 @@ def fetch_truth(
                 )
                 out[station_id].append("hko_extract")
 
-            elif kind == "wunderground_daily":
-                if wu_api_key is None:
-                    # Caller is responsible for providing the apiKey; skip if not given
-                    continue
-                units_hint = "m" if city.settlement.units == "celsius" else "e"
-                payload = fetch_wu(
-                    city.settlement.station_id, target_date, units_hint, wu_api_key, client
+            elif kind == "open_meteo_archive":
+                payload = fetch_open_meteo_archive(
+                    city.latitude, city.longitude, city.timezone, target_date, client
                 )
                 if payload is None:
                     continue
-                parsed = parse_wu_historical_json(payload, units_hint)
-                if parsed is None:
+                val_c = parse_open_meteo_archive(payload, target_date)
+                if val_c is None:
                     continue
-                value, units = parsed
                 upsert_observation(
-                    DailyMaxObservation(
-                        station_id, target_date, "wunderground", value, units, True,
-                    ),
+                    DailyMaxObservation(station_id, target_date, "open_meteo_archive", val_c, "celsius", True),
                     db_path,
                 )
-                out[station_id].append("wunderground")
+                out[station_id].append("open_meteo_archive")
 
-                # Cross-check for KNYC: NWS CLI from NYC office (OKX)
-                if city.settlement.station_id == "KNYC":
-                    cli_text = fetch_nws_cli("OKX", target_date, client)
-                    if cli_text is not None:
-                        val_f = parse_nws_cli_text(cli_text, target_date)
-                        if val_f is not None:
-                            upsert_observation(
-                                DailyMaxObservation(
-                                    station_id, target_date, "nws_cli", val_f, "fahrenheit", False,
-                                ),
-                                db_path,
-                            )
-                            out[station_id].append("nws_cli")
+            elif kind == "nws_cli":
+                office = _NWS_OFFICE.get(city.settlement.station_id)
+                if office is None:
+                    continue
+                cli_text = fetch_nws_cli(office, target_date, client)
+                if cli_text is None:
+                    continue
+                val_f = parse_nws_cli_text(cli_text, target_date)
+                if val_f is None:
+                    continue
+                upsert_observation(
+                    DailyMaxObservation(station_id, target_date, "nws_cli", val_f, "fahrenheit", True),
+                    db_path,
+                )
+                out[station_id].append("nws_cli")
+
     finally:
         if owned:
             client.close()
